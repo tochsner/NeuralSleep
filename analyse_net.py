@@ -161,8 +161,8 @@ def print_layerwise_entropy(model, layer):
 
     neural_sleep = NeuralSleep(model)
 
-    print(neural_sleep.calculate_average_layer_entropy(x_train, layer))
-    print(neural_sleep.calculate_average_layer_entropy(x_test, layer))
+    print(neural_sleep.calculate_information_per_neuron(x_train, layer))
+    print(neural_sleep.calculate_information_per_neuron(x_test, layer))
 
 
 model = SimpleNeuronalNetwork((784, 10, 10), sigmoidActivation, sigmoidDerivation, MeanSquareCostFunction())

@@ -46,7 +46,9 @@ class SimpleNeuronalNetwork(BaseNetwork):
 
         self.Neurons = [np.zeros((x)) for x in size[:]]
         self.Bias = [np.zeros((x)) for x in size[:]]
-        self.Weights = [np.random.randn(size[x],size[x+1]) for x in range(0, len(size)-1)]                                 
+        self.Weights = [np.random.randn(size[x],size[x+1]) for x in range(0, len(size)-1)]
+
+        self.WeightsTrainable = [np.ones((size[x], size[x+1])) for x in range(0, len(size)-1)]
 
         self.NewWeights = [np.zeros((size[x],size[x+1])) for x in range(0, len(size)-1)]
         self.NewBias = [np.zeros((x)) for x in size[:]]
@@ -128,12 +130,25 @@ class SimpleNeuronalNetwork(BaseNetwork):
         return self.Derivatives[0]
 
 
+    def unFreezeNeuron(self, layer, neuronIndex):
+        self.WeightsTrainable[layer - 1][:, neuronIndex] = 1
+        self.WeightsTrainable[layer][neuronIndex, :] = 1
+
+    def freezeAllWeights(self):
+        self.WeightsTrainable = [0 * x for x in self.WeightsTrainable]
+
+    def unFreezeAllWeights(self):
+        self.WeightsTrainable = [0 * x + 1 for x in self.WeightsTrainable]
+
+
     """
     Changes the weights and biases after a batch
     """
     def applyChanges(self, learningRate, biasLearningRate, regularization):
-        self.Weights = [(w - nw * (learningRate / self.BatchSize) - regularization * w) for w, nw in zip(self.Weights, self.NewWeights)]
-        self.Bias = [(b - nb * (biasLearningRate / self.BatchSize)) for b, nb in zip(self.Bias, self.NewBias)]                                                        
+        self.Weights = [(w - nw * (learningRate / self.BatchSize) * tb - regularization * w)
+                        for w, nw, tb in zip(self.Weights, self.NewWeights, self.WeightsTrainable)]
+        self.Bias = [(b - nb * (biasLearningRate / self.BatchSize))
+                     for b, nb in zip(self.Bias, self.NewBias)]
 
         self.NewWeights = [np.zeros(x.shape) for x in self.NewWeights]
         self.NewBias = [np.zeros(x.shape) for x in self.NewBias]                   
@@ -143,34 +158,3 @@ class SimpleNeuronalNetwork(BaseNetwork):
     def evaluate(self, test_data):               
         test_results = [(np.argmax(self.getOutput(x[:,0])), y) for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
-
-
-"""
-Implements a neural network, trained unsupervised with the Hebbian learning rule.
-"""
-class HebbianNetwork(SimpleNeuronalNetwork): 
-    def __init__(self, size, activationFunction):
-        SimpleNeuronalNetwork.__init__(self, size, activationFunction, activationFunction, activationFunction)
-
-    def getDerivatives(self, outputDerivatives):
-        return outputDerivatives
-        
-    def trainNetwork(self, inputValues):
-        # feed forward
-        self.getOutput(inputValues)
-
-        # change weights
-        return self.calculateNewWeights()
-        
-    def calculateNewWeights(self):
-        for i in range(0, self.LayerCount - 1):
-            self.NewWeights[i] += sp.stats.zscore(self.Weights[i] * self.Neurons[i][np.newaxis].T) * self.Neurons[i+1].T 
-
-        self.BatchSize += 1           
-
-    def applyChanges(self, learningRate, biasLearningRate, regularization):
-        self.Weights = [(w + nw * (learningRate / self.BatchSize) - regularization * w) for w, nw in zip(self.Weights, self.NewWeights)]
-        self.NewWeights = [np.zeros(x.shape) for x in self.NewWeights]
-        
-        self.BatchSize = 0            
-
