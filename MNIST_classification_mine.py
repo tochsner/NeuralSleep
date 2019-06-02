@@ -14,13 +14,14 @@ def train_model():
     (x_train, y_train), (x_test, y_test) = prepare_data_for_tooc(data)
 
     hp = Hyperparameter()
-    hp.epochs = 50
-    hp.lr = 2
+    hp.epochs = 30
+    hp.lr = 1.5
     hp.r = 0.00001
 
     mse = MeanSquareCostFunction()
 
-    classifier = SimpleNeuronalNetwork((784, 20, 10), sigmoidActivation, sigmoidDerivation, mse)
+    base_classifier = SimpleNeuronalNetwork((784, 100, 20, 10), sigmoidActivation, sigmoidDerivation, mse)
+    classifier_1 = SimpleNeuronalNetwork((784, 100, 20, 10), sigmoidActivation, sigmoidDerivation, mse)
 
     for e in range(hp.epochs):
         for b in range(x_train.shape[0] // hp.batch_size):
@@ -38,5 +39,8 @@ def train_model():
             tests += 1
 
         print(accuracy / tests, flush=True)
+
+
+    classifier.save("saved_models/fashion_mnist_1")
 
 train_model()

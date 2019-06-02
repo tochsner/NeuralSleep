@@ -167,5 +167,3 @@ def print_layerwise_entropy(model, layer):
 
 model = SimpleNeuronalNetwork((784, 10, 10), sigmoidActivation, sigmoidDerivation, MeanSquareCostFunction())
 model.load("saved_models/784-10-10 Baseline")
-print_layerwise_entropy(model, 1)
-print_layerwise_entropy(model, 2)
